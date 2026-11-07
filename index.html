@@ -399,7 +399,7 @@ const starStr = (s) => `<span class="stars" aria-label="星${s}つ">${"★".repe
 // dex：手口 → 確かめた数（たしかめ帳）。runs：モードごとの途中経過。ebest：とことんで一度で見抜いた数の自己ベスト
 const fresh = () => ({ v: 1, days: {}, hdays: {}, adays: {}, dex: {}, runs: {}, tut: false, kofi: {}, ach: {}, ebest: 0, ans: {} });
 let MODE = "d";
-let mem = null, saveWarned = false;
+let mem = null;
 const doneOf = (r) => !!r && r.res.length >= r.list.length && r.mode !== "e", recOf = (r) => ({ m: r.res.map((x) => x.m), k: r.list.map((t) => t.split("|")[0]) });
 const runKey = (mode, date) => (mode === "a" ? "a:" + date : mode);
 const bookOf = (s, m) => (m === "d" ? s.days : m === "h" ? s.hdays : m === "a" ? s.adays : null);
@@ -459,7 +459,8 @@ function tidy(s) {
   }
   return s;
 }
-function save(fn) { const s = load(); fn(s); s.t = Math.max(Date.now(), (s.t || 0) + 1); const j = JSON.stringify(s); try { localStorage.setItem(KEY, j); mem = null; } catch (e) { mem = j; if (!saveWarned) { saveWarned = true; setTimeout(() => toast("この端末に記録を保存できませんでした。閉じると記録が消えることがあります"), 0); } } return s; }
+function saveWarn(on) { let b = document.getElementById("savewarn"); if (!on) { if (b) b.remove(); return; } if (b) return; b = document.createElement("div"); b.id = "savewarn"; b.setAttribute("role", "status"); b.textContent = "この端末に記録を保存できませんでした。ページを開き直すと、いまの記録が消えます"; b.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:9999;padding:8px 12px;background:#fff3cd;color:#000;font-size:15px;line-height:1.5;text-align:center;pointer-events:none;border-bottom:2px solid #8a6d00"; (document.body || document.documentElement).appendChild(b); } // 保存できないあいだは帯を出したままにし、保存できたら消す（toast は数秒で消えて見落とす。shared-workflows routines/game-dev.md「記録の保存」）
+function save(fn) { const s = load(); fn(s); s.t = Math.max(Date.now(), (s.t || 0) + 1); const j = JSON.stringify(s); try { localStorage.setItem(KEY, j); mem = null; saveWarn(false); } catch (e) { mem = j; saveWarn(true); } return s; }
 function streak(days) { let k = todayKey(), n = 0; if (!days[k]) k = prevDay(k); while (days[k]) { n++; k = prevDay(k); } return n; }
 const playedDays = (s) => new Set([...Object.keys(s.days), ...Object.keys(s.adays)]).size;
 const solvedAll = (s) => Object.values(s.dex).reduce((a, b) => a + (+b || 0), 0);
