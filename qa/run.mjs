@@ -90,7 +90,7 @@ check("README の URL のすぐ後ろに全角の字を続けない（Link check
   check("PWA：manifest にアイコン2つと名前がある", mf.name === "デマたしかめ" && mf.icons.length >= 2 && mf.start_url === "./");
   const st = await checkSwStall(sw);
   check("PWA：通信が本文の途中で止まっても、4秒で保存した画面を返す（shared-workflows template/qa/sw-check.mjs）", st.ok, JSON.stringify(st));
-  check("PWA：返したら60秒の見張りを止める", /clearTimeout\(deadline\)/.test(sw)); }
+  check("PWA：返したら60秒の見張りを止める", /const done = \(\) => \{ clearTimeout\(cap\); saved\(\); \};/.test(sw)); }
 { // とことんの並びを何百回作って、1回の中で同じ投稿が出ない・つぎ足しても重ならない（index.html の関数をそのまま動かす）
   const src = html.match(/const ERAMP[\s\S]*?\nconst starsOf/)[0].replace(/\nconst starsOf$/, "");
   const ctx = { G, Math, Date, Set, String };
