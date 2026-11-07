@@ -1,0 +1,8 @@
+{
+  "screens": [
+    { "name": "今日の5問", "click": ["#go-d"] },
+    { "name": "調べた結果と答え", "click": ["#go-p", ".lv button", ".tl[data-t=src]", ".tl[data-t=date]", ".tl[data-t=img]", ".tl[data-t=off]"] },
+    { "name": "たしかめ帳", "click": ["#go-dex"] },
+    { "name": "このゲームについて", "click": ["#f-about"] }
+  ]
+}
