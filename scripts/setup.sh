@@ -4,7 +4,7 @@
 # Claude Code のクラウドセッションでは .claude/settings.json の SessionStart フックが自動で呼ぶ。
 # CI の Setup check（共通部品）が、まっさらな環境でこれが通るかを確かめる。
 # ひな形: satou-aaaaa/shared-workflows の template/scripts/setup.sh。ゲームはそのまま写せば動く（npm_dir と next だけ、ちがえば書き換える）。
-# ひな形の版: 8（上げたら写しの版も上げる。scripts/drift-check.mjs が古い写しを週次まとめに出す）
+# ひな形の版: 9（上げたら写しの版も上げる。scripts/drift-check.mjs が古い写しを週次まとめに出す）
 #   2: 依存は毎回 npm ci・ブラウザが無ければ止める・このシェルで要る操作（nvm use・export）を最後に出す（shared-workflows incidents/2026-11-03-setup-false-ready.md）
 #   3: nvm.sh を --no-use で読む（.nvmrc の版が入っていないと、読んだだけで何も言わずに止まっていた。incidents/2026-11-04-setup-nvm-silent-stop.md）
 #   4: ブラウザの場所はファイルかも見る（-x だけだとフォルダでも通った。2026-11-05 CodeRabbit が bunshi-tsukuri #1 で指摘）
@@ -15,6 +15,7 @@
 #      NODE_ENV=production でも devDependencies（playwright）を入れる（2026-11-07 kikigaki-techo の Setup check・gogen-suiri #1 の CodeRabbit）
 #   7: package.json に Playwright があるのに読み込めないときは止める（起動の試しを黙って飛ばし「✓」を出していた。2026-11-07 kotowaza-awase #1 の CodeRabbit）
 #   8: 相対パスの CHROMIUM_PATH を絶対パスにしてから使う（起動の試しは npm_dir に移って動くので、相対だと別の場所を指していた。2026-11-07 dema-tashikame #1 の CodeRabbit）
+#   9: 絶対パスにした CHROMIUM_PATH を以後のコマンド（QA）にも渡す（親のシェルには相対のまま残っていた。2026-11-07 dema-tashikame #1 の CodeRabbit）
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -64,7 +65,7 @@ fi
 # Playwright のブラウザ。検査は CHROMIUM_PATH があればそれを、無ければ Playwright の置き場のものを使う
 # 相対パスはここで絶対パスにする（起動の試しは "$npm_dir" に移って動く。Playwright は相対の executablePath をいまの場所から探す。版8）
 if [ -n "${CHROMIUM_PATH:-}" ]; then
-  case "$CHROMIUM_PATH" in /* | [A-Za-z]:*) ;; *) CHROMIUM_PATH="$PWD/$CHROMIUM_PATH"; export CHROMIUM_PATH ;; esac
+  case "$CHROMIUM_PATH" in /* | [A-Za-z]:*) ;; *) CHROMIUM_PATH="$PWD/$CHROMIUM_PATH"; export CHROMIUM_PATH; session_env "CHROMIUM_PATH=$(q "$CHROMIUM_PATH")" ;; esac   # 以後の QA にも絶対パスを渡す（版9）
 fi
 if [ "${PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD:-}" = 1 ]; then
   # 取ってこない環境（Claude Code のクラウドなど）は、入っているものを探す。見つからなければ止める
