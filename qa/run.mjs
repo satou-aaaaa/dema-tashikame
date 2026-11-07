@@ -1,4 +1,4 @@
-// デマたしかめの検査。問題（12の手口×2000問：答えが手がかりの印と合う・決め手・文の長さ）・今日の5問と上級（3年分）・
+// デマたしかめの検査。問題（18の手口×2000問：答えが手がかりの印と合う・決め手・文の長さ）・今日の5問と上級（3年分）・
 // 通しで遊ぶ・まちがい・ヒント・決め手・続きから・上級・練習・とことん（何百回）・たしかめ帳・実績・カレンダー・あとから・
 // 古いタブ・スマホ幅・外へ通信しない・PWA・引き継ぎコード・見やすさを確かめる。
 // 使い方: node qa/run.mjs   失敗があれば終了コード 1。結果は qa-report/report.md。
@@ -39,8 +39,11 @@ const G = createRequire(import.meta.url)(path.join(root, "gen.js"));
     }
     kinds[k.id] = seen.size;
   }
-  check("12の手口×2000問：答えは手がかりの印だけで決まり（別の書き方で決め直して同じ）、決め手とヒントの道具が合う", bad.length === 0, bad.slice(0, 4).join(" / "));
-  check("手口は12で、やさしい3・ふつう4・むずかしい5", G.KINDS.length === 12 && [0, 1, 2].map((l) => G.kindsOf(l).length).join() === "3,4,5");
+  check("18の手口×2000問：答えは手がかりの印だけで決まり（別の書き方で決め直して同じ）、決め手とヒントの道具が合う", bad.length === 0, bad.slice(0, 4).join(" / "));
+  check("手口は18で、やさしい5・ふつう6・むずかしい7", G.KINDS.length === 18 && [0, 1, 2].map((l) => G.kindsOf(l).length).join() === "5,6,7");
+  check("どの手口にも「ほんとうに確かめるなら」（60字以内・スマホでできるやり方）がある", G.KINDS.every((k) => k.how && [...k.how].length <= 60 && G.make(`${k.id}|how`).how === k.how));
+  // 足した手口は from の日から。前の日の今日の5問・上級は変えない（2026-11-08 に手口を6つ足す前の並び）
+  check("手口を足しても前の日の問題は変わらない（11/7 の今日の5問・上級）", G.dailyTags("2026-11-07").join() === "official|2026-11-07:d0,photo|2026-11-07:d1,fakeacct|2026-11-07:d2,wait|2026-11-07:d3,abroad|2026-11-07:d4" && G.KINDS.filter((k) => k.from).every((k) => k.from === "2026-11-08") && [...G.dailyTags("2026-11-07"), ...G.hardTags("2026-11-07")].every((t) => !G.BY[t.split("|")[0]].from));
   const total = Object.values(kinds).reduce((a, b) => a + b, 0);
   check("ちがう投稿が300以上（好きなだけ遊べるように。shared-workflows game-dev.md F6）", total >= 300, `${total}・${JSON.stringify(kinds)}`);
   check("3つの答えがどれも出る（広める・広めない・待つ）", Object.values(ansCount).every((n) => n > N), JSON.stringify(ansCount));
@@ -59,7 +62,7 @@ const G = createRequire(import.meta.url)(path.join(root, "gen.js"));
     if (JSON.stringify(G.dailyTags(d)) !== JSON.stringify(t)) bad.push(d + "同じ日で変わる");
   }
   check("今日の5問（やさしい2・ふつう2・むずかしい1、手口は重ねない）と上級（むずかしい3・今日のむずかしいと別）を3年分作れる", bad.length === 0, bad.slice(0, 5).join(","));
-  check("2か月のうちに12の手口が全部出る・前の日と同じ組の日が少ない", cover.size === 12 && sameAsPrev < 40, `${cover.size}・${sameAsPrev}`);
+  check("2か月のうちに18の手口が全部出る・前の日と同じ組の日が少ない", cover.size === 18 && sameAsPrev < 40, `${cover.size}・${sameAsPrev}`);
 }
 
 // ---- 2. ファイルの中身 ----
@@ -161,11 +164,12 @@ try {
   check("道具を押すと、手がかりが印の文字（🚩/✓/？/－）つきで出る（色だけで分けない）・知らせは aria-live", /🚩 あやしい|✓ たしか|？ まだ分からない|－ 写真なし/.test(fd) && await p.getAttribute("#finds", "aria-live") === "polite");
   const wr = ["true", "dema", "wait"].find((a) => a !== c.ans);
   await p.click(`.ch[data-a="${wr}"]`);
-  check("まちがえると ✕ の印と「ちがう」の文字・知らせは role=status", await p.locator(".ch.ng").count() === 1 && (await p.evaluate(() => getComputedStyle(document.querySelector(".ch.ng"), "::after").content)).includes("ちがう") && (await p.textContent("#msg")).includes("ちがいます") && await p.getAttribute("#msg", "role") === "status");
+  check("まちがえると ✕ の印と「ちがう」の文字・知らせは role=status", await p.locator(".ch.ng").count() === 1 && (await p.evaluate(() => getComputedStyle(document.querySelector(".ch.ng"), "::after").content)).includes("ちがう") && /✕ (広めるのは|どこかに|この投稿に|「🚩)/.test(await p.textContent("#msg")) && await p.getAttribute("#msg", "role") === "status");
   await p.reload(); await p.waitForTimeout(150); await p.click("#go-d");
   check("途中で閉じても続きから（同じ問題・調べた道具とまちがいの印のまま）", await p.locator(".ch.ng").count() === 1 && await p.locator(".fd").count() === 1 && await p.evaluate(() => __dm.cur().i) === 0);
   await solve(p);
   check("正解すると判子・✓ 正解・手口の説明・全部の手がかり・★2（まちがい1回）", await p.locator(".stamp").count() === 1 && await p.locator(".ch.ok").count() === 1 && (await p.textContent(".verdict")).includes("手口：") && await p.locator(".fd").count() === 4 && (await stars(p)) === "星2つ");
+  check("答えたあと「ほんとうに確かめるなら」とどう広がるかの一言が出る", (await p.textContent("#how")).includes(G.BY[c.kind || (await p.evaluate(() => __dm.cur().P.kind))].how) && (await p.textContent("#spread")).length > 10);
   await p.click("#next");
   // 2問目：ヒント2回
   await p.click("#hint");
@@ -203,7 +207,10 @@ try {
   await p.waitForTimeout(150);
   const after = await mem(p);
   check("練習は今日の記録を増やさない（たしかめ帳の数はふえる）", JSON.stringify(after.days) === JSON.stringify(before.days) && Object.values(after.dex).reduce((a, b) => a + b) === Object.values(before.dex).reduce((a, b) => a + b) + 5);
-  await p.click("#back"); await p.click("#go-dex");
+  await p.click("#back");
+  check("ホームにこれまでの答え（🚫 止めた・⏳ 待った・📣 伝えた）が出て、合計が確かめた数と合う", await p.locator("#anss").count() === 1 && (await p.$$eval("#anss b", (b) => b.map((x) => +x.textContent))).reduce((a, b) => a + b) === Object.values(after.dex).reduce((a, b) => a + b));
+  await p.click("#go-dex");
+  check("たしかめ帳に手口ごとの確かめ方（📱）が出る", (await p.textContent(".book button")).includes("📱"));
   const firstKind = await p.getAttribute(".book button", "data-k");
   await p.click(".book button");
   check("たしかめ帳の手口を押すと、その手口だけで練習", (await p.evaluate(() => __dm.load().runs.p.list)).every((t) => t.startsWith(firstKind + "|")));

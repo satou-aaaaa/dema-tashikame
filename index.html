@@ -69,12 +69,12 @@ button.sub:disabled,button.main:disabled{opacity:.45;cursor:default}
 .post .ph{border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#dfe5ee}
 .post .ph svg{display:block;width:100%;height:auto}
 .post .ft{display:flex;gap:16px;color:var(--ink2);font-size:.8rem;margin-top:8px}
-.stamp{position:absolute;right:12px;top:52px;font-weight:800;font-size:1.5rem;padding:4px 14px;border:4px solid currentColor;border-radius:10px;transform:rotate(-12deg);background:#ffffffd9;animation:stamp .45s cubic-bezier(.2,1.6,.4,1)}
+.stamp{position:absolute;right:12px;bottom:10px;font-weight:800;font-size:1.5rem;padding:4px 14px;border:4px solid currentColor;border-radius:10px;transform:rotate(-12deg);background:#ffffffd9;animation:stamp .45s cubic-bezier(.2,1.6,.4,1)}
 .stamp.dema{color:var(--shu)}.stamp.true{color:var(--ai)}.stamp.wait{color:var(--ki)}
 @keyframes stamp{from{transform:rotate(-12deg) scale(2.2);opacity:0}to{transform:rotate(-12deg) scale(1);opacity:1}}
 /* 調べる道具 */
-.sec{font-weight:800;font-size:.95rem;margin:0;display:flex;align-items:center;gap:8px}
-.sec small{font-weight:500;color:var(--ink2);font-size:.78rem}
+.sec{font-weight:800;font-size:.95rem;margin:0;display:flex;align-items:center;gap:0 8px;flex-wrap:wrap}
+.sec small{font-weight:500;color:var(--ink2);font-size:.78rem;flex:1 1 14em}
 .tools{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tl{all:unset;box-sizing:border-box;cursor:pointer;min-height:64px;border-radius:14px;background:var(--paper);border:2px solid var(--ai);box-shadow:0 4px 0 #1f4f8a44;padding:6px 10px;display:flex;flex-direction:column;justify-content:center;gap:1px;line-height:1.3}
 .tl b{font-size:1rem}.tl small{font-size:.72rem;color:var(--ink2)}
@@ -107,6 +107,9 @@ button.sub:disabled,button.main:disabled{opacity:.45;cursor:default}
 .verdict{background:var(--paper);border:2px solid var(--ok);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 0 #1d243320;animation:up .35s ease-out}
 .verdict .hd{display:flex;justify-content:center;align-items:baseline;gap:10px;font-size:1.3rem;font-weight:800;flex-wrap:wrap}
 .verdict p{font-size:.95rem;line-height:1.7;margin:0;text-align:left}
+.verdict .how{background:var(--bg);border-left:4px solid var(--ai);border-radius:8px;padding:8px 10px}
+.verdict .spread{font-weight:700}
+.book button small.how{margin-top:4px;color:var(--ink)}
 .verdict b{color:var(--ok2)}
 .verdict .miss{color:var(--shu2);font-size:.88rem}
 .hint{background:var(--paper);border:2px solid var(--gold);border-radius:14px;padding:.6rem .9rem;font-size:.92rem;line-height:1.7}
@@ -495,7 +498,7 @@ function nextAch(s) {
 }
 
 // ---- 投稿の写真（絵で描く。どれも作り話の場面）----
-const PHOTO_NAME = { flood: "水につかった町", crack: "ひび割れた道路", fire: "けむりの出る建物", wave: "大きな波", shelf: "からっぽの棚", rock: "くずれた山の斜面", truck: "給水車", rain: "強い雨", smoke: "遠くのけむり", dark: "明かりの消えた町", line: "人の行列", cloud: "細長い雲", tornado: "たつまき", talk: "会見の画面", river: "水かさの増えた川", tree: "たおれた木", rubble: "がれき" };
+const PHOTO_NAME = { flood: "水につかった町", crack: "ひび割れた道路", fire: "けむりの出る建物", wave: "大きな波", shelf: "からっぽの棚", rock: "くずれた山の斜面", truck: "給水車", rain: "強い雨", smoke: "遠くのけむり", dark: "明かりの消えた町", line: "人の行列", cloud: "細長い雲", tornado: "たつまき", talk: "会見の画面", river: "水かさの増えた川", tree: "たおれた木", rubble: "がれき", drink: "飲み物のコップ", newsshot: "ニュースの画面" };
 const photoName = (k) => (k.startsWith("animal:") ? "道路にいる動物" : PHOTO_NAME[k] || "写真");
 function photoSvg(k) {
   const W = 320, H = 180, sky = (a, b) => `<defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#sk)"/>`;
@@ -518,6 +521,8 @@ function photoSvg(k) {
   else if (k === "talk") b = `<rect width="${W}" height="${H}" fill="#2f4a6b"/><rect x="0" y="130" width="${W}" height="50" fill="#1d2f47"/>` + emo("🎙", 160, 110, 40) + `<rect x="110" y="40" width="100" height="50" rx="8" fill="#ffffff22"/>`;
   else if (k === "tree") b = sky("#9fb0c0", "#dde4ea") + `<rect y="120" width="${W}" height="60" fill="#666c76"/>` + emo("🌳", 160, 120, 70) ;
   else if (k === "rubble") b = sky("#a59e95", "#d9d3cb") + `<path d="M0 180 L30 120 L80 140 L120 100 L170 130 L220 95 L270 135 L320 115 V180Z" fill="#7d7468"/>` + emo("🧱", 120, 140, 30);
+  else if (k === "drink") b = `<rect width="${W}" height="${H}" fill="#efe6d6"/><rect y="130" width="${W}" height="50" fill="#b99c74"/>` + emo("🍵", 120, 112, 64) + emo("🥛", 210, 116, 50);
+  else if (k === "newsshot") b = `<rect width="${W}" height="${H}" fill="#24344d"/><rect x="0" y="0" width="${W}" height="26" fill="#b3261e"/><text x="12" y="18" font-size="14" font-weight="700" fill="#fff">ニュース速報</text><rect x="20" y="44" width="180" height="70" rx="6" fill="#3b5277"/>` + emo("🗾", 110, 80, 40) + `<rect x="0" y="130" width="${W}" height="50" fill="#f2f2f2"/><rect x="14" y="142" width="240" height="10" fill="#9aa3ad"/><rect x="14" y="160" width="170" height="8" fill="#c3c9cf"/>`;
   else b = sky("#b8d4ee", "#e8eef4");
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="写真：${photoName(k)}">${b}</svg>`;
 }
@@ -553,6 +558,7 @@ function home() {
     <div class="row"><button class="sub" id="go-p">練習（何度でも）</button><button class="sub" id="go-dex">たしかめ帳 ${nk}/${G.KINDS.length}</button></div>
     <div class="row"><button class="sub" id="go-cal" aria-label="カレンダー${late.length ? `（あとから遊べる日 ${late.length}）` : ""}">カレンダー${late.length ? ` <span class="badge">▶${late.length}</span>` : ""}</button><button class="sub" id="go-ach">実績 ${ag}/${ACH.length}</button></div>
     <div class="stats"><div><b>${playedDays(s)}</b><small>遊んだ日</small></div><div><b>${solvedAll(s)}</b><small>確かめた投稿</small></div><div><b>${st >= 1 ? st : "—"}</b><small>${st >= 1 ? "続けて" : "続けた日"}</small></div></div>
+    ${solvedAll(s) ? `<div class="stats" id="anss" aria-label="これまでの答え"><div><b>${s.ans.dema || 0}</b><small>🚫 止めた</small></div><div><b>${s.ans.wait || 0}</b><small>⏳ 待った</small></div><div><b>${s.ans.true || 0}</b><small>📣 伝えた</small></div></div>` : ""}
     ${footer()}`;
   $("go-d").onclick = () => (k !== todayKey() ? home() : done ? result("d", k) : startRun("d"));
   $("go-h").onclick = () => (k !== todayKey() ? home() : hdone ? result("h", k) : startRun("h"));
@@ -684,7 +690,7 @@ function choose(a) {
     buzz(40);
     cur.wrong.push(a); keep(); paint();
     if (MODE === "e") save((s) => { const r = s.runs.e; if (same(r)) r.miss = (r.miss || 0) + 1; });
-    $("msg").className = "msg bad"; $("msg").textContent = cur.open.length < 4 ? "✕ ちがいます。まだ調べていない所を見てみましょう。" : "✕ ちがいます。印をもう一度見てみましょう。";
+    $("msg").className = "msg bad"; $("msg").textContent = wrongMsg(a, cur.P.ans) + (cur.open.length < 4 ? "まだ調べていない所も見てみましょう。" : "");
     return;
   }
   cur.done = true; buzz([10, 40, 10]);
@@ -705,6 +711,8 @@ function choose(a) {
     <div class="hd">✓ 正解：${ANSICON[P.ans]} ${G.ANS_LONG[P.ans]} ${starStr(st)}</div>
     <p><b>手口：${esc(P.name)}</b><br>${esc(P.why)}</p>
     <p>決め手は「${esc(keyName)}」。${ks ? "調べてから決められました。" : ""}</p>
+    <p class="how" id="how">📱 <b>ほんとうに確かめるなら</b><br>${esc(P.how)}</p>
+    <p class="spread" id="spread">${esc(spreadMsg(P))}</p>
     ${ks ? "" : `<p class="miss">決め手を調べずに決めました（★が1つへります）。</p>`}
     ${before.length === 0 ? `<p class="miss">何も調べずに決めると、まちがいを広めやすくなります。</p>` : ""}
     <button class="main ok" id="next">${fin ? "結果を見る" : "次の投稿へ"}</button></div>`;
@@ -712,6 +720,19 @@ function choose(a) {
   setTimeout(() => { if ($("next") && cur && cur.done && cur.tag === P.tag) $("next").scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 60);
 }
 
+// まちがえた答えに合わせた一言（どの道具が答えかは言わない。決まり＝印の読み方だけ）
+function wrongMsg(a, ans) {
+  if (a === "true") return "✕ 広めるのは、出どころ・日付・公式が「✓ たしか」でそろったときだけです。";
+  if (ans === "dema") return "✕ どこかに「🚩 あやしい」所があります。";
+  if (ans === "true") return "✕ この投稿に「🚩 あやしい」所はありません。";
+  return "✕ 「🚩 あやしい」所は見つかりませんが、まだ分からない所があります。";
+}
+// 答えたあとの一言：その投稿をどうすると、どう広がるか
+function spreadMsg(P) {
+  if (P.ans === "dema") return `🛡 ここで止めれば、${P.rt.toLocaleString()}回共有された先へ、まちがいを広げずにすみます。`;
+  if (P.ans === "true") return "📣 出どころごと伝えると、必要な人に正しい知らせが届きます。";
+  return "⏳ 公式の発表が出たら、その発表を伝えましょう。";
+}
 function finish() {
   const s = load(), run = s.runs[MODE];
   if (!run) return home();
@@ -792,7 +813,7 @@ function book() {
   app.innerHTML = `
     <header><button class="icon" id="back" aria-label="ホームへ">←</button><h1>たしかめ帳<small>${n}/${G.KINDS.length}の手口</small></h1></header>
     <p class="note">確かめた投稿の手口が集まります。押すと、その手口だけで5問練習できます。</p>
-    ${LV.map((l, lv) => `<p class="agrp">${l}</p><div class="book">${G.KINDS.filter((k) => k.lv === lv).map((k) => s.dex[k.id] > 0 ? `<button data-k="${k.id}"><span class="mk" aria-hidden="true">📒</span><span>${esc(k.name)}<small>${esc(k.why)}</small></span><span class="ct">${s.dex[k.id]}</span></button>` : `<span class="no" role="img" aria-label="まだ見ていない手口"><span class="mk" aria-hidden="true">？</span><span>まだ</span><span class="ct"></span></span>`).join("")}</div>`).join("")}
+    ${LV.map((l, lv) => `<p class="agrp">${l}</p><div class="book">${G.KINDS.filter((k) => k.lv === lv).map((k) => s.dex[k.id] > 0 ? `<button data-k="${k.id}"><span class="mk" aria-hidden="true">📒</span><span>${esc(k.name)}<small>${esc(k.why)}</small><small class="how">📱 ${esc(k.how)}</small></span><span class="ct">${s.dex[k.id]}</span></button>` : `<span class="no" role="img" aria-label="まだ見ていない手口"><span class="mk" aria-hidden="true">？</span><span>まだ</span><span class="ct"></span></span>`).join("")}</div>`).join("")}
     ${footer()}`;
   $("back").onclick = home;
   document.querySelectorAll(".book button").forEach((b) => (b.onclick = () => startRun("p", b.dataset.k)));
