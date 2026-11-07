@@ -247,7 +247,7 @@ try {
     await q.evaluate(() => { Storage.prototype._set = Storage.prototype.setItem; Storage.prototype.setItem = function () { throw new Error("QuotaExceededError"); }; });
     await q.click("#quit"); await q.waitForTimeout(100);
     const back = await q.evaluate(() => __dm.load().runs.e);
-    check("保存できないときは「保存できませんでした」を1回だけ知らせる（黙っていない）", await q.locator(".toast", { hasText: "保存できませんでした" }).count() === 1);
+    check("保存に失敗したら、保存できるまで帯（#savewarn）で知らせ続け、保存できたら消す", await q.evaluate(async () => { const orig = Storage.prototype._set || Storage.prototype.setItem; Storage.prototype.setItem = function () { throw new Error("full"); }; __dm.save(() => {}); __dm.save(() => {}); const one = document.querySelectorAll("#savewarn").length === 1 && document.getElementById("savewarn").textContent.includes("保存できませんでした"); await new Promise((r) => setTimeout(r, 2500)); const stay = !!document.getElementById("savewarn"); Storage.prototype.setItem = orig; __dm.save(() => {}); return one && stay && !document.getElementById("savewarn"); }));
     await q.evaluate(() => { Storage.prototype.setItem = Storage.prototype._set; __dm.home(); });
     check("保存に失敗しているときに降りても、とことんの回が戻らない（続きからが出ない）", back === null && !(await q.textContent("#go-e")).includes("続きから"), JSON.stringify(back && back.id));
     await q.close();
