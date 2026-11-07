@@ -197,9 +197,109 @@
         return { acct: { name: "Help_now", id: handle(R, "help"), icon: "🆘", mark: "" }, time: ago(R), text: sc.text, photo: sc.photo, rt: rts(R, 100, 700),
           tools: { src: T("red", "毎日ちがう国の災害の動画を投稿しているアカウント。この町の人ではありません。"), date: T("ok", "きょうの投稿です。"), img: T("unk", "前に出た同じ動画は、まだ見つかりません。"), off: T("unk", `${P}・消防は、まだこの話を伝えていません。`) } };
       } },
+
+    // ---- 2026-11-08 から今日の5問・上級にも出す（from）。それより前の日の問題は変えない ----
+    { id: "news", lv: 0, from: "2026-11-08", name: "報道の確かな知らせ", look: "👤 出どころを調べてみましょう。どこの、どんなアカウントですか？",
+      why: "地元の新聞社などが市の発表をもとに伝えた知らせは、元の発表と合えば伝えてよい情報です。",
+      make(R) {
+        const P = pick(R, PLACES), rv = pick(R, RIVERS), h = ri(R, 9, 17), n = ri(R, 2, 9);
+        const sc = pick(R, [
+          { text: `${P}は、${rv}の水位が下がったため、${h}時に避難の指示を取り消したと発表しました。`, photo: "river" },
+          { text: `${P}の市立図書館は、あすから${n}日間、建物の点検のため休みます。`, photo: null },
+          { text: `${P}で、きょう${h}時から、ごみ収集の時間が30分おくれています。市が発表しました。`, photo: "truck" },
+          { text: `${P}の${rv}の花火大会は、強い風のため中止になりました。主催の市が発表しました。`, photo: null },
+        ]);
+        return { acct: { name: `${P}日報（報道）`, id: handle(R, "nippo"), icon: "📰", mark: "" }, time: now(R), text: sc.text, photo: sc.photo, rt: rts(R, 5, 60),
+          tools: { src: T("ok", "地元の新聞社のアカウント。記事に、市の発表をもとにしたと書いてあります。"), date: T("ok", "きょうの記事です。"), img: sc.photo ? T("ok", "新聞社が写した写真。前に出た同じ写真は見つかりません。") : NOIMG, off: T("ok", `${P}のホームページにも同じ知らせがあります。`) } };
+      } },
+    { id: "health", lv: 0, from: "2026-11-08", name: "健康のうわさ", look: "🏛 公式・報道を調べてみましょう。保健所や病院は何と言っていますか？",
+      why: "「これで病気にならない」という話は、体験談だけのことが多いです。保健所や医師の説明を見ます。",
+      make(R) {
+        const P = pick(R, PLACES);
+        const sc = pick(R, [
+          { text: "毎朝コップ1杯のお湯に塩を入れて飲むと、かぜにかからない！ 家族にも教えてあげて！", photo: "drink" },
+          { text: "玉ねぎを切って部屋に置いておくと、インフルエンザのウイルスを吸いとってくれるよ！", photo: null },
+          { text: "熱が出たら、お酒で体をふくとすぐ下がる！ おばあちゃんの知恵、みんなに回して！", photo: null },
+          { text: "この緑のお茶を1週間飲んだら、血圧の薬がいらなくなった！ 薬はやめても大丈夫！", photo: "drink" },
+        ]);
+        return { acct: person(R), time: ago(R), text: sc.text, photo: sc.photo, rt: rts(R, 30, 400),
+          tools: { src: T("unk", "ふつうの人の体験談。医師や研究の名前は書いていません。"), date: T("ok", "きょうの投稿です。"), img: sc.photo ? T("unk", "飲み物の写真。効き目があるかは写真からは分かりません。") : NOIMG, off: T("red", `${P}の保健所は「これで病気を防げる・治るという確かな根拠はない」と説明しています。`) } };
+      } },
+    { id: "satire", lv: 1, from: "2026-11-08", name: "作り話の記事", look: "👤 出どころを調べてみましょう。その記事はどんなサイトのものですか？",
+      why: "笑わせるための作り話の記事が、本当のニュースとして回ることがあります。サイトの説明を見ます。",
+      make(R) {
+        const P = pick(R, PLACES), n = ri(R, 2, 5);
+        const sc = pick(R, [
+          { text: `【速報】${P}、来年から月曜日を休みの日にすると決定！ これは助かる！（記事のリンク）` },
+          { text: `${P}の小学校で、宿題を出すのが禁止に！ ついに決まったらしい！（記事のリンク）` },
+          { text: `${P}の駅に、${n}階まで歩かずに行ける「動く階段」が全部の出口に！ すごい！（記事のリンク）` },
+        ]);
+        return { acct: person(R), time: ago(R), text: sc.text, photo: null, rt: rts(R, 50, 500),
+          tools: { src: T("red", "記事は作り話をのせるサイトのもの。ページの下に「すべて作り話です」とあります。"), date: T("ok", "きょうの投稿です。"), img: NOIMG, off: T("unk", `${P}のホームページには、この話は何も出ていません。`) } };
+      } },
+    { id: "headline", lv: 1, from: "2026-11-08", name: "見出しだけ", look: "👤 出どころを調べてみましょう。リンクの先の記事は、最後まで読みましたか？",
+      why: "見出しだけを見て回すと、中身とちがう意味で広がります。記事を開いて読んでから決めます。",
+      make(R) {
+        const P = pick(R, PLACES), n = ri(R, 2, 3);
+        const sc = pick(R, [
+          { text: `${P}、水道代が${n}倍に！ ひどすぎる…（記事のリンク）`, src: `記事を読むと、${n}倍になるのは大きな工場だけ。家の水道代は変わらないとあります。` },
+          { text: `${P}の小学校、全部しめることに！ 子どもはどうなるの？（記事のリンク）`, src: "記事を読むと、古い校舎を1つずつ建てかえる話で、学校はなくならないとあります。" },
+          { text: `${P}のバス、あすから全部止まる！ 足がなくなる…（記事のリンク）`, src: "記事を読むと、止まるのは夜の1本だけ。ほかのバスはいつも通りとあります。" },
+        ]);
+        return { acct: person(R), time: ago(R), text: sc.text, photo: null, rt: rts(R, 40, 400),
+          tools: { src: T("red", sc.src), date: T("ok", "きょうの記事です。"), img: NOIMG, off: T("unk", `${P}のホームページの知らせは、記事の中身と同じです。`) } };
+      } },
+    { id: "correction", lv: 2, from: "2026-11-08", name: "あとで訂正された知らせ", look: "🏛 公式・報道を調べてみましょう。そのあと、知らせは直されていませんか？",
+      why: "本物の公式でも、まちがえて出したあと訂正することがあります。広める前に、新しい知らせを見ます。",
+      make(R) {
+        const P = pick(R, PLACES), h = ri(R, 13, 17), rv = pick(R, RIVERS);
+        const sc = pick(R, [
+          { text: `給水車は、${P}役所の前に${h}時に来ます。入れ物を持ってきてください。`, off: `市は少しあとで「場所をまちがえました。正しくは小学校の前です」と訂正しています。` },
+          { text: `${rv}の近くの道は、${h}時から通れるようになりました。`, off: "市は少しあとで「まだ通れません。まちがえて出しました」と訂正しています。" },
+          { text: `${P}の避難所は、あすの朝${h - 4}時にしめます。`, off: `市は少しあとで「しめる日はまだ決まっていません」と訂正しています。` },
+        ]);
+        return { acct: offAcct(R, P, ""), time: `きょう ${h - 6}:${String(ri(R, 0, 59)).padStart(2, "0")}`, text: sc.text, photo: null, rt: rts(R, 30, 300),
+          tools: { src: T("ok", `${P}のホームページから案内されている、本物の公式アカウントです。`), date: T("ok", "きょうの朝の投稿です。"), img: NOIMG, off: T("red", sc.off) } };
+      } },
+    { id: "screenshot", lv: 2, from: "2026-11-08", name: "作られたニュース画面", look: "🖼 写真をよく見てみましょう。本物のニュースの画面ですか？",
+      why: "テレビやニュースの画面に似せた画像は、だれでも作れます。報道の本物のサイトにあるかを見ます。",
+      make(R) {
+        const P = pick(R, PLACES), d = ri(R, 2, 9);
+        const sc = pick(R, [
+          { text: `ニュースでやってた！ ${P}は${d}日から外に出るのが禁止だって！（画面の写真）` },
+          { text: `テレビで見た。${P}のお米が売り切れで、もう買えないらしい！（画面の写真）` },
+          { text: `ニュース速報の画面。${P}に大きな台風が${d}日にまっすぐ来るって！（画面の写真）` },
+        ]);
+        return { acct: person(R), time: ago(R), text: sc.text, photo: "newsshot", rt: rts(R, 80, 700),
+          tools: { src: T("unk", "ふつうの人の投稿。どこの放送かは書いていません。"), date: T("ok", "きょうの投稿です。"), img: T("red", "字の形と色が本物の放送とちがいます。どの報道のサイトにも、この知らせはありません。"), off: T("unk", `${P}・気象台は、この話について何も出していません。`) } };
+      } },
   ];
+
+  // ほんとうに確かめるなら（スマホでできるやり方。特定のアプリ・会社の名前は出さない）
+  const HOW = {
+    photo: "写真を長押しして「画像で検索」。同じ写真が前に出ていないか、日付と場所を見ます。",
+    old: "元の投稿を開いて、投稿の日付を見ます。共有された日ではなく、最初に書かれた日です。",
+    official: "市のホームページから公式アカウントへ進み、同じ知らせがあるか見ます。",
+    rumor: "「だれが」「どこで」発表したかを探します。見つからなければ、広めずに公式を見ます。",
+    fakeacct: "名前でなく、市のホームページにのっている公式アカウントの案内から確かめます。",
+    wait: "市・消防・ニュースの発表が出るまで待ちます。出たら、その発表を伝えます。",
+    chain: "「回して」とあったら一度止まり、気象台など専門の役所の説明を探します。",
+    ai: "看板の字・指・影・電柱など細かい所を拡大して見ます。公式の被害の知らせとも比べます。",
+    cut: "元の会見の動画や記事を、はじめから終わりまで見ます。前後で意味が変わっていないか。",
+    urgent: "言葉が強くても、本物の公式か・いま出た知らせかを確かめたら、すぐ伝えます。",
+    waitpic: "写真に看板・駅名など場所の分かる物があるか見ます。分からなければ公式を待ちます。",
+    abroad: "投稿した人の、ほかの投稿を見ます。いつもどこの話を出している人でしょう。",
+    news: "記事に、元になった発表が書いてあるか見ます。市のホームページとも比べます。",
+    health: "保健所・病院・医師会など、健康の専門のところの説明を探します。薬は自分でやめません。",
+    satire: "記事のサイトの「このサイトについて」を見ます。作り話のサイトと書いてあることがあります。",
+    headline: "リンクを開いて、記事を最後まで読みます。見出しだけで回しません。",
+    correction: "広める前に、同じアカウントの新しい投稿を見ます。訂正や取り消しが出ていないか。",
+    screenshot: "画面の写真でなく、報道の本物のサイトで同じニュースを探します。",
+  };
+  for (const k of KINDS) k.how = HOW[k.id];
   const BY = Object.fromEntries(KINDS.map((k) => [k.id, k]));
-  const kindsOf = (lv) => KINDS.filter((k) => k.lv === lv).map((k) => k.id);
+  // date を渡すと、その日に出してよい手口だけ（from より前の日は前のまま。過去の日の問題を変えない）
+  const kindsOf = (lv, date) => KINDS.filter((k) => k.lv === lv && (!date || !k.from || k.from <= date)).map((k) => k.id);
   function seedOf(str) { let h = 2166136261; for (const ch of String(str)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
   function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
@@ -209,7 +309,7 @@
     if (!k) return null;
     const p = k.make(rng(seedOf(tag)));
     const ans = judge(p.tools), keys = keyOf(p.tools, ans);
-    return { tag, kind, lv: k.lv, name: k.name, look: k.look, why: k.why, ans, keys, ...p };
+    return { tag, kind, lv: k.lv, name: k.name, look: k.look, why: k.why, how: k.how, ans, keys, ...p };
   }
   // 決め手の道具（どれか1つを開けば決め手を見たことになる）：広めない→あやしい印の道具、広める→出どころと公式、待つ→まだ分からない写真・公式
   function keyOf(tools, ans) {
@@ -218,16 +318,16 @@
     return ["img", "off"].filter((id) => tools[id].f === "unk");
   }
   // 決め手は手口の look に書いた道具と同じにする（QA が見る）
-  const LOOKTOOL = { photo: "img", old: "date", official: "off", rumor: "src", fakeacct: "src", wait: "off", chain: "off", ai: "img", cut: "src", urgent: "src", waitpic: "img", abroad: "src" };
+  const LOOKTOOL = { photo: "img", old: "date", official: "off", rumor: "src", fakeacct: "src", wait: "off", chain: "off", ai: "img", cut: "src", urgent: "src", waitpic: "img", abroad: "src", news: "src", health: "off", satire: "src", headline: "src", correction: "off", screenshot: "img" };
 
   // 今日の5問（やさしい2・ふつう2・むずかしい1）。手口は重ねない
   function dailyTags(date) {
-    const R = rng(seedOf("day:" + date)), e = pickN(R, kindsOf(0), 2), n = pickN(R, kindsOf(1), 2), h = pickN(R, kindsOf(2), 1);
+    const R = rng(seedOf("day:" + date)), e = pickN(R, kindsOf(0, date), 2), n = pickN(R, kindsOf(1, date), 2), h = pickN(R, kindsOf(2, date), 1);
     return [...e, ...n, ...h].map((id, i) => `${id}|${date}:d${i}`);
   }
   // 上級の3問（むずかしいだけ・今日の5問のむずかしいとは別の手口）
   function hardTags(date) {
-    const dh = dailyTags(date)[4].split("|")[0], R = rng(seedOf("hard:" + date)), h = pickN(R, kindsOf(2).filter((x) => x !== dh), 3);
+    const dh = dailyTags(date)[4].split("|")[0], R = rng(seedOf("hard:" + date)), h = pickN(R, kindsOf(2, date).filter((x) => x !== dh), 3);
     return h.map((id, i) => `${id}|${date}:h${i}`);
   }
   // 同じ問題かを見分ける印（場面の文と写真と手がかり）
