@@ -399,7 +399,7 @@ const starStr = (s) => `<span class="stars" aria-label="星${s}つ">${"★".repe
 // dex：手口 → 確かめた数（たしかめ帳）。runs：モードごとの途中経過。ebest：とことんで一度で見抜いた数の自己ベスト
 const fresh = () => ({ v: 1, days: {}, hdays: {}, adays: {}, dex: {}, runs: {}, tut: false, kofi: {}, ach: {}, ebest: 0, ans: {} });
 let MODE = "d";
-let mem = null;
+let mem = null, saveWarned = false;
 const doneOf = (r) => !!r && r.res.length >= r.list.length && r.mode !== "e", recOf = (r) => ({ m: r.res.map((x) => x.m), k: r.list.map((t) => t.split("|")[0]) });
 const runKey = (mode, date) => (mode === "a" ? "a:" + date : mode);
 const bookOf = (s, m) => (m === "d" ? s.days : m === "h" ? s.hdays : m === "a" ? s.adays : null);
@@ -459,7 +459,7 @@ function tidy(s) {
   }
   return s;
 }
-function save(fn) { const s = load(); fn(s); s.t = Math.max(Date.now(), (s.t || 0) + 1); const j = JSON.stringify(s); try { localStorage.setItem(KEY, j); mem = null; } catch (e) { mem = j; } return s; }
+function save(fn) { const s = load(); fn(s); s.t = Math.max(Date.now(), (s.t || 0) + 1); const j = JSON.stringify(s); try { localStorage.setItem(KEY, j); mem = null; } catch (e) { mem = j; if (!saveWarned) { saveWarned = true; setTimeout(() => toast("この端末に記録を保存できませんでした。閉じると記録が消えることがあります"), 0); } } return s; }
 function streak(days) { let k = todayKey(), n = 0; if (!days[k]) k = prevDay(k); while (days[k]) { n++; k = prevDay(k); } return n; }
 const playedDays = (s) => new Set([...Object.keys(s.days), ...Object.keys(s.adays)]).size;
 const solvedAll = (s) => Object.values(s.dex).reduce((a, b) => a + (+b || 0), 0);
@@ -618,7 +618,7 @@ const STAMP = { true: "確認済み", dema: "デマ", wait: "保留" };
 const ANSORDER = ["true", "dema", "wait"];
 function postHtml(P) {
   const a = P.acct;
-  return `<article class="post" id="post" aria-label="投稿">
+  return `<article class="post" id="post" aria-label="投稿" tabindex="-1">
     <div class="who"><span class="av" aria-hidden="true">${a.icon}</span><span class="nm">${esc(a.name)}${a.mark ? `<span class="mk" aria-label="公式の印">${a.mark} 公式</span>` : ""}<small>${esc(a.id)}・${esc(P.time)}</small></span></div>
     <p class="tx" data-a11y-say>${esc(P.text)}</p>
     ${P.photo ? `<div class="ph">${photoSvg(P.photo)}</div>` : ""}
@@ -662,6 +662,7 @@ function play() {
   if ($("quit")) $("quit").onclick = () => { if (cur && cur.done) return; finish(); };
   paint();
   toTop();
+  $("post").focus({ preventScroll: true }); // 作り直したあとフォーカスを問題へ（body に戻ると、キーボード・読み上げで続けにくい）
 }
 function findHtml(id) { const t = G.TOOLS.find((x) => x.id === id), f = cur.P.tools[id]; return `<div class="fd ${f.f}" data-t="${id}"><span class="fl">${FLAG[f.f]}</span><span><span class="tn">${t.icon} ${t.name}：</span>${esc(f.t)}</span></div>`; }
 function paint() {
@@ -673,8 +674,8 @@ function paint() {
   const h = $("hint"); if (h) h.disabled = cur.done || cur.hints >= 2;
   $("hintbox").innerHTML = cur.hints && !cur.done ? `<div class="hint" role="status">💡 ${esc(cur.P.look)}${cur.hints >= 2 ? "<br>💡 ちがう答えを1つ消しました。" : ""}</div>` : "";
 }
-// ヒント2：まちがいの答えを1つ消す（消す順は並びの順）
-const cutOf = () => { if (cur.hints < 2) return []; const left = ANSORDER.filter((a) => a !== cur.P.ans && !cur.wrong.includes(a)); return left.slice(0, Math.max(0, left.length - 1)); };
+// ヒント2：正解でない答えのうち最後の1つ以外を消す（まちがいの数で変えない。変えると、しぼったあとにまちがいを選んだとき消した答えが戻る。shared-workflows incidents/2026-11-07-hint-cut-comes-back.md）
+const cutOf = () => (cur.hints < 2 ? [] : ANSORDER.filter((a) => a !== cur.P.ans).slice(0, -1));
 function openTool(id) {
   if (cur.open.includes(id)) { const d = document.querySelector(`.fd[data-t="${id}"]`); if (d) d.scrollIntoView({ behavior: "smooth", block: "nearest" }); return; }
   if (!cur.done && !same(load().runs[MODE])) { toast("別の画面で先に進んでいます"); return play(); }
