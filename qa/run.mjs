@@ -177,9 +177,14 @@ try {
   check("ヒント1は見る道具を光らせる（答えは言わない）", (await p.textContent("#hintbox")).includes("💡") && await p.locator(`.tl.key[data-t="${c.look}"]`).count() === 1 && await p.locator(".ch.ng").count() === 0);
   await p.click("#hint");
   check("ヒント2はちがう答えを1つ消す・ヒントは2回まで", await p.locator(".ch.ng").count() === 1 && await p.locator("#hint:disabled").count() === 1);
+  // しぼったあとに残ったまちがいを選んでも、消した答えは戻らない（正解だけが残る。shared-workflows incidents/2026-11-07-hint-cut-comes-back.md）
+  const left = await p.$$eval(".ch:not(.ng)", (b) => b.map((x) => x.dataset.a));
+  await p.click(`.ch[data-a="${left.find((a) => a !== c.ans)}"]`);
+  check("ヒント2のあとに残ったまちがいを選ぶと、正解だけが残る（消した答えが戻らない）", left.length === 2 && JSON.stringify(await p.$$eval(".ch:not(.ng)", (b) => b.map((x) => x.dataset.a))) === JSON.stringify([c.ans]));
   await solve(p);
   check("ヒント2回は★1", (await stars(p)) === "星1つ");
   await p.click("#next");
+  check("次の問題でフォーカスが問題（投稿）に移る（body に戻らない）", await p.evaluate(() => document.activeElement && document.activeElement.id) === "post");
   // 3問目：何も調べずに答える
   await solve(p, { look: false });
   check("決め手を調べずに答えると★が1つへり、そう知らせる", (await stars(p)) === "星2つ" && (await p.textContent(".verdict")).includes("決め手を調べずに"));
@@ -187,7 +192,7 @@ try {
   for (let i = 3; i < 5; i++) { await solve(p); await p.click("#next"); }
   await p.waitForTimeout(150);
   const s1 = await mem(p);
-  check("5問で結果：今日の記録に1問ごとの数（1・2・1・0・0）", JSON.stringify(s1.days[TODAY]?.m) === "[1,2,1,0,0]", JSON.stringify(s1.days[TODAY]));
+  check("5問で結果：今日の記録に1問ごとの数（1・3・1・0・0。2問目はヒント2回＋しぼったあとのまちがい1回）", JSON.stringify(s1.days[TODAY]?.m) === "[1,3,1,0,0]", JSON.stringify(s1.days[TODAY]));
   const share = await p.textContent(".share");
   const places = G.PLACES.some((x) => share.includes(x));
   check("シェアの文に投稿の中身・町の名前・答えを出さない（印だけ）", /第\d+回/.test(share) && /🟢/.test(share) && !places && !/広めない|広めずに|デマ」|手口/.test(share), share);
@@ -242,6 +247,7 @@ try {
     await q.evaluate(() => { Storage.prototype._set = Storage.prototype.setItem; Storage.prototype.setItem = function () { throw new Error("QuotaExceededError"); }; });
     await q.click("#quit"); await q.waitForTimeout(100);
     const back = await q.evaluate(() => __dm.load().runs.e);
+    check("保存できないときは「保存できませんでした」を1回だけ知らせる（黙っていない）", await q.locator(".toast", { hasText: "保存できませんでした" }).count() === 1);
     await q.evaluate(() => { Storage.prototype.setItem = Storage.prototype._set; __dm.home(); });
     check("保存に失敗しているときに降りても、とことんの回が戻らない（続きからが出ない）", back === null && !(await q.textContent("#go-e")).includes("続きから"), JSON.stringify(back && back.id));
     await q.close();
