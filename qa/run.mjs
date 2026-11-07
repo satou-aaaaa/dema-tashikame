@@ -107,9 +107,10 @@ check("README の URL のすぐ後ろに全角の字を続けない（Link check
 const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".png": "image/png", ".webmanifest": "application/manifest+json" };
 const server = createServer((req, res) => {
   const p = decodeURIComponent(new URL(req.url, "http://x").pathname), f = path.join(root, p === "/" ? "index.html" : p);
-  if (!f.startsWith(root) || !existsSync(f)) { res.writeHead(404); return res.end(); }
+  if (!f.startsWith(root + path.sep) || !existsSync(f)) { res.writeHead(404); return res.end(); }
   res.writeHead(200, { "content-type": TYPES[path.extname(f)] || "application/octet-stream" }); res.end(readFileSync(f));
-}).listen(0);
+});
+await new Promise((r) => server.listen(0, "127.0.0.1", r));
 const url = `http://127.0.0.1:${server.address().port}/`;
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 const errors = [], outside = [];
@@ -226,6 +227,17 @@ try {
     const L = await p.evaluate(() => __dm.load().runs.e.list), k = L.map((t) => G.keyText(G.make(t)));
     check("とことんは並びを使い切る前に100問を足して続く（足しても同じ投稿なし）", L.length === 200 && new Set(k).size === 200 && await p.locator(".ch").count() === 3);
     await p.click("#quit");
+  }
+  {
+    // 保存に失敗しているとき（容量がいっぱい）に「ここで降りる」を押しても、とことんの途中経過が戻らない
+    const q = await newPage(); await closeHow(q);
+    await q.click("#go-e"); await solve(q); await q.click("#next");
+    await q.evaluate(() => { Storage.prototype._set = Storage.prototype.setItem; Storage.prototype.setItem = function () { throw new Error("QuotaExceededError"); }; });
+    await q.click("#quit"); await q.waitForTimeout(100);
+    const back = await q.evaluate(() => __dm.load().runs.e);
+    await q.evaluate(() => { Storage.prototype.setItem = Storage.prototype._set; __dm.home(); });
+    check("保存に失敗しているときに降りても、とことんの回が戻らない（続きからが出ない）", back === null && !(await q.textContent("#go-e")).includes("続きから"), JSON.stringify(back && back.id));
+    await q.close();
   }
   {
     const q = await newPage(); await closeHow(q);
