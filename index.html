@@ -622,7 +622,9 @@ function randomTagsOf(kind, salt, seen) { const out = []; for (let i = 0; out.le
 let cur = null;
 const same = (r) => r && cur && r.date === cur.date && r.id === cur.id && r.res.length === cur.i && r.list[cur.i] === cur.tag;
 // 途中の保存：別のタブで使ったヒント・まちがい・調べた道具も減らさない
-function keep() { save((s) => { const r = s.runs[MODE]; if (!same(r)) return; const was = r.cur && r.cur.i === cur.i && r.cur.tag === cur.tag ? r.cur : { wrong: [], hints: 0, open: [] }; cur.hints = Math.max(cur.hints, was.hints || 0); for (const w of was.wrong || []) if (!cur.wrong.includes(w)) cur.wrong.push(w); for (const o of was.open || []) if (!cur.open.includes(o)) cur.open.push(o); if (!cur.jd && was.jd) cur.jd = was.jd; r.cur = { i: cur.i, tag: cur.tag, wrong: cur.wrong.slice(), hints: cur.hints, open: cur.open.slice(), jd: cur.jd }; }); }
+// まちがえた・ヒントを使ったその時に復習へ入れる（とことんで降りる・閉じるなど、解き終えずにやめても残る。2026-11-11 CodeRabbit）
+function early() { if (cur && !cur.done && ((cur.wrong && cur.wrong.length) || cur.hints || (cur.w2 && cur.w2.length))) Depth.mark(cur.tag, 1, cur.P.name); }
+function keep() { early(); save((s) => { const r = s.runs[MODE]; if (!same(r)) return; const was = r.cur && r.cur.i === cur.i && r.cur.tag === cur.tag ? r.cur : { wrong: [], hints: 0, open: [] }; cur.hints = Math.max(cur.hints, was.hints || 0); for (const w of was.wrong || []) if (!cur.wrong.includes(w)) cur.wrong.push(w); for (const o of was.open || []) if (!cur.open.includes(o)) cur.open.push(o); if (!cur.jd && was.jd) cur.jd = was.jd; r.cur = { i: cur.i, tag: cur.tag, wrong: cur.wrong.slice(), hints: cur.hints, open: cur.open.slice(), jd: cur.jd }; }); }
 const keySeen = () => cur.P.keys.some((t) => cur.open.includes(t));
 const missOf = () => cur.wrong.length + cur.hints + (keySeen() ? 0 : 1);
 const FLAG = { red: "🚩 あやしい", ok: "✓ たしか", unk: "？ まだ分からない", none: "－ 写真なし" };

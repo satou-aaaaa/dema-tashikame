@@ -361,6 +361,7 @@ try {
     check("自信のボタンを押すと ✓ が出る（色だけで分けない）", (await q.getAttribute("#dp-sure", "aria-pressed")) === "true" && (await q.textContent("#dp-sure")).includes("✓"));
     { const c = await curP(q); await q.click(`.tl[data-t="${c.keys[0]}"]`); await q.click(`.ch[data-a="${["true", "dema", "wait"].find((a) => a !== c.ans)}"]`); }
     check("自信ありでまちがえると、知らせに「思いこみ」と出て、自信は変えられない", (await q.textContent("#msg")).includes("思いこみ") && await q.locator("#dp-sure:disabled").count() === 1);
+    check("まちがえたその時に復習へ入る（解き終えずにやめても残る。2026-11-11 CodeRabbit）", await q.evaluate(() => { const d = JSON.parse(localStorage.getItem("dema-depth") || "{}"); return !!(d.rv && d.rv[__dm.cur().tag]); }));
     await q.reload(); await q.waitForTimeout(150); await q.evaluate(() => __dm.play("p"));
     await q.click(`.ch[data-a="${(await curP(q)).ans}"]`); await q.waitForSelector(".verdict");
     check("閉じて開き直しても、自信ありでまちがえたことが答えのあとに出る", (await q.textContent(".verdict")).includes("自信ありでまちがえた"));
