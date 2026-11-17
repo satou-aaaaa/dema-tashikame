@@ -233,6 +233,15 @@ try {
   await p.click("#go-e"); await p.click("#quit"); await p.waitForTimeout(150);
   check("「ここで降りる」で終わり、一度で見抜いた数（2）が自己ベストに残る", (await mem(p)).ebest === 2 && (await p.textContent("#eres")).includes("4投稿") && (await p.textContent("#eclean")).includes("一度で見抜いた投稿 2"));
   {
+    // 正解した直後（次へを押す前）でも「ここで降りる」で終われ、その1問が数に入る（前は cur.done のとき押しても何も起きなかった）
+    const q = await newPage(); await closeHow(q);
+    await q.click("#go-e"); await solve(q);
+    const lab = await q.textContent("#quit");
+    await q.click("#quit"); await q.waitForTimeout(150);
+    check("とことんで正解した直後に「ここで降りる」を押すと結果の画面になり、確かめた1投稿が数に入る", lab.includes("1問で終える") && await q.locator("#eres").count() === 1 && (await q.textContent("#eres")).includes("1投稿") && (await q.textContent("#eclean")).includes("一度で見抜いた投稿 1") && (await mem(q)).ebest === 1 && !(await mem(q)).runs.e);
+    await q.close();
+  }
+  {
     // とことんを使い切りそうになったら並びを足して続ける
     await p.click("#go-e");
     await p.evaluate(() => __dm.save((s) => { const r = s.runs.e; r.res = r.list.slice(0, 98).map(() => ({ m: 0 })); }));
@@ -409,6 +418,10 @@ try {
   const sample = { "dema-v1": JSON.stringify({ v: 1, tut: true, days: { "2026-11-07": { m: [0, 1, 0, 0, 2], k: ["photo", "old", "rumor", "wait", "ai"] } }, hdays: {}, adays: {}, dex: { photo: 1, old: 1, rumor: 1, wait: 1, ai: 1 }, runs: {}, kofi: {}, ach: {}, ebest: 7, ans: { dema: 4, wait: 1 }, t: 1 }) };
   await checkTransfer({ browser, url, game: "dema-tashikame", sample, check, open: async (pg) => { if (await pg.locator("#howto[open]").count()) await pg.click("#howto-ok"); } });
 } catch (e) { check("引き継ぎの検査が最後まで動く", false, e.message.split("\n")[0]); }
+{ // 知らせ（.toast）は下のボタンを塞がない（shared-workflows incidents/2026-11-17-known-game-bugs-spread.md）
+  const pt = await browser.newPage(); await pt.goto(url);
+  check("知らせ（.toast）が出ていても、その下のボタンを押せる（pointer-events:none）", await pt.evaluate(() => { const d = document.createElement("div"); d.className = "toast"; document.body.appendChild(d); const v = getComputedStyle(d).pointerEvents; d.remove(); return v === "none"; }));
+  await pt.close(); }
 await browser.close();
 server.close();
 // 深さの部品（shared-workflows template/qa/depth-check.mjs）

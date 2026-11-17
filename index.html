@@ -174,7 +174,7 @@ dialog#howto h2{margin:0 0 10px}
 dialog#howto ol{padding-left:1.3em;margin:0 0 12px;line-height:1.8}
 dialog#howto p{margin:0 0 10px;font-size:.9rem;line-height:1.7;color:var(--ink2)}
 dialog#howto a{color:var(--shu2);min-height:44px;display:inline-flex;align-items:center}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-weight:700;z-index:9;box-shadow:0 6px 20px #0005;max-width:90%;text-align:center;font-size:1rem}
+.toast{pointer-events:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-weight:700;z-index:9;box-shadow:0 6px 20px #0005;max-width:90%;text-align:center;font-size:1rem}
 footer{margin-top:auto;text-align:center;font-size:.8rem;color:var(--ink2);display:flex;gap:4px 14px;justify-content:center;flex-wrap:wrap}
 footer a{color:var(--ink2);min-height:44px;display:inline-flex;align-items:center}
 /* 色の見分けを助ける：手がかりの印は字と枠の形でも分かる。ここでは朱と藍をさらに見分けやすい組に */
@@ -679,7 +679,7 @@ function play() {
   document.querySelectorAll(".ch").forEach((b) => (b.onclick = () => choose(b.dataset.a)));
   Depth.bindSure(tag);
   if ($("hint")) $("hint").onclick = hint;
-  if ($("quit")) $("quit").onclick = () => { if (cur && cur.done) return; finish(); };
+  if ($("quit")) $("quit").onclick = () => finish();
   paint();
   toTop();
   $("post").focus({ preventScroll: true }); // 作り直したあとフォーカスを問題へ（body に戻ると、キーボード・読み上げで続けにくい）
@@ -729,7 +729,7 @@ function choose(a) {
   paint();
   document.querySelectorAll(".ch").forEach((b) => { b.disabled = true; if (b.dataset.a === P.ans) b.classList.add("ok"); });
   document.querySelectorAll(".tl").forEach((b) => (b.disabled = true));
-  if ($("hint")) $("hint").disabled = true; if ($("quit")) $("quit").hidden = true;
+  if ($("hint")) $("hint").disabled = true; if ($("quit") && r) $("quit").textContent = `ここで降りる（${r.res.length}問で終える）`; // とことんは正解した直後も降りられる（正解した問も数に入る）
   $("stampbox").innerHTML = `<span class="stamp ${P.ans}" aria-hidden="true">${STAMP[P.ans]}</span>`;
   $("hintbox").innerHTML = ""; $("msg").className = "msg"; $("msg").textContent = "";
   const keyName = P.keys.map((t) => G.TOOLS.find((x) => x.id === t).name).join("・");
