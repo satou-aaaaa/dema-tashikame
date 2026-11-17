@@ -433,7 +433,7 @@ function load() {
     const x = ra[m], y = rb[m];
     if (x === undefined || y === undefined) { if (x || y) s.runs[m] = x || y; continue; }
     if (!x || !y) {
-      const r = x || y; if (!r || bank(s, r) || doneOf(r)) continue;
+      const r = x || y; if (!r || bank(s, r) || doneOf(r) || (r.mode === "e" && n.runs[m] === null)) continue;
       const bd = bookOf(s, r.mode);
       if (!bd) { if (n.runs[m] !== null) s.runs[m] = r; continue; } // とことん・練習：新しい側で終えた回は戻さない（保存に失敗しているとき。2026-11-07 CodeRabbit）
       if (!bd[r.date]) s.runs[m] = r;
