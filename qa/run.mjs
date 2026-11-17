@@ -233,6 +233,15 @@ try {
   await p.click("#go-e"); await p.click("#quit"); await p.waitForTimeout(150);
   check("「ここで降りる」で終わり、一度で見抜いた数（2）が自己ベストに残る", (await mem(p)).ebest === 2 && (await p.textContent("#eres")).includes("4投稿") && (await p.textContent("#eclean")).includes("一度で見抜いた投稿 2"));
   {
+    // 正解した直後（次へを押す前）でも「ここで降りる」で終われ、その1問が数に入る（前は cur.done のとき押しても何も起きなかった）
+    const q = await newPage(); await closeHow(q);
+    await q.click("#go-e"); await solve(q);
+    const lab = await q.textContent("#quit");
+    await q.click("#quit"); await q.waitForTimeout(150);
+    check("とことんで正解した直後に「ここで降りる」を押すと結果の画面になり、確かめた1投稿が数に入る", lab.includes("1問で終える") && await q.locator("#eres").count() === 1 && (await q.textContent("#eres")).includes("1投稿") && (await q.textContent("#eclean")).includes("一度で見抜いた投稿 1") && (await mem(q)).ebest === 1 && !(await mem(q)).runs.e);
+    await q.close();
+  }
+  {
     // とことんを使い切りそうになったら並びを足して続ける
     await p.click("#go-e");
     await p.evaluate(() => __dm.save((s) => { const r = s.runs.e; r.res = r.list.slice(0, 98).map(() => ({ m: 0 })); }));
