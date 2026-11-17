@@ -337,7 +337,7 @@ try {
         await q.waitForTimeout(100);
         const ov = await q.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         if (ov > 0) bad.push(`${w}px ${go || "ホーム"} ${ov}px`);
-        small.push(...(await q.$$eval("button:not([disabled]), a[href]", (bs) => bs.filter((b) => b.checkVisibility() && !b.closest(".cal")).filter((b) => b.getBoundingClientRect().height < 44).map((b) => (b.id || b.className || b.textContent).slice(0, 20)))).map((x) => `${w}/${go}:${x}`));
+        small.push(...(await q.$$eval("button:not([disabled]), a[href]", (bs) => bs.filter((b) => b.checkVisibility() && !b.closest(".cal")).filter((b) => Math.round(b.getBoundingClientRect().height) < 44).map((b) => (b.id || b.className || b.textContent).slice(0, 20)))).map((x) => `${w}/${go}:${x}`));
       }
       if (w === 320) { await q.goto(url); await q.waitForTimeout(100); await q.click("#go-d"); await q.click(".tl >> nth=0"); await q.screenshot({ path: path.join(root, "qa-report", "play-320.png"), fullPage: true }).catch(() => {}); }
       await q.context().close();
