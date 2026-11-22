@@ -147,7 +147,7 @@ const stars = (p) => p.getAttribute(".verdict .stars", "aria-label");
 
 try {
   const p = await newPage();
-  check("はじめて開くと遊び方が出る", await p.locator("#core-coach").count() === 1);
+  check("はじめて開くと遊び方が出る", await p.locator("#core-coach").waitFor({ timeout: 3000 }).then(() => true, () => false));
   await p.keyboard.press("Escape"); await p.waitForTimeout(150);
   await p.reload(); await p.waitForTimeout(200);
   check("遊び方を Esc で閉じたら、開き直しても出ない（shared-workflows #186）", await p.locator("#howto[open]").count() === 0);
