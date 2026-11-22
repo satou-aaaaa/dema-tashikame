@@ -16,6 +16,7 @@ import { checkSwStall } from "./sw-check.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const results = [];
 const check = (name, ok, detail = "") => results.push({ name, ok: !!ok, detail: String(detail).slice(0, 400) });
+const firstClose = async (q) => { if (await q.locator("#howto[open]").count()) await q.click("#howto-ok"); if (await q.locator("#core-coach").count()) { await q.evaluate(() => Core.coach.leave()); await q.waitForTimeout(100); } }; // はじめての練習の吹き出しをやめてホームへ（sync-template の migrateFirstQa が足した）
 const G = createRequire(import.meta.url)(path.join(root, "gen.js"));
 
 // ---- 1. 問題の作り方（ブラウザを使わない）----
@@ -130,7 +131,7 @@ async function newPage(w = 390, ctx) {
   await p.goto(url); await p.waitForTimeout(200);
   return p;
 }
-const closeHow = async (p) => { if (await p.locator("#howto[open]").count()) await p.click("#howto-ok"); };
+const closeHow = async (p) => { await firstClose(p); };
 const curP = (p) => p.evaluate(() => { const c = __dm.cur(); return { ans: c.P.ans, keys: c.P.keys, look: __dm.G.LOOKTOOL[c.P.kind], wrong: c.wrong }; });
 const mem = (p) => p.evaluate(() => JSON.parse(localStorage.getItem("dema-v1") || "{}"));
 // 決め手を調べてから正しく答える（wrong 回まちがえてから）。look=false なら何も調べずに答える
@@ -146,11 +147,11 @@ const stars = (p) => p.getAttribute(".verdict .stars", "aria-label");
 
 try {
   const p = await newPage();
-  check("はじめて開くと遊び方が出る", await p.locator("#howto[open]").count() === 1);
+  check("はじめて開くと遊び方が出る", await p.locator("#core-coach").count() === 1);
   await p.keyboard.press("Escape"); await p.waitForTimeout(150);
   await p.reload(); await p.waitForTimeout(200);
   check("遊び方を Esc で閉じたら、開き直しても出ない（shared-workflows #186）", await p.locator("#howto[open]").count() === 0);
-  await p.click("#f-how"); await p.click("#howto-ok"); await p.reload(); await p.waitForTimeout(200);
+  await firstClose(p).then(() => p.click("#f-how")); await firstClose(p); await p.reload(); await p.waitForTimeout(200);
   check("「わかった」を押した直後に開き直しても遊び方が出ない", await p.locator("#howto[open]").count() === 0);
   check("ホームに今日の確かめ方が出る・上級・とことん・練習は最初から押せる", (await p.textContent("#tip")).includes("今日の確かめ方") && await p.locator("#go-h:not([disabled])").count() === 1 && await p.locator("#go-e:not([disabled])").count() === 1 && await p.locator("#go-p").count() === 1);
 
@@ -416,7 +417,7 @@ try {
 
 try {
   const sample = { "dema-v1": JSON.stringify({ v: 1, tut: true, days: { "2026-11-07": { m: [0, 1, 0, 0, 2], k: ["photo", "old", "rumor", "wait", "ai"] } }, hdays: {}, adays: {}, dex: { photo: 1, old: 1, rumor: 1, wait: 1, ai: 1 }, runs: {}, kofi: {}, ach: {}, ebest: 7, ans: { dema: 4, wait: 1 }, t: 1 }) };
-  await checkTransfer({ browser, url, game: "dema-tashikame", sample, check, open: async (pg) => { if (await pg.locator("#howto[open]").count()) await pg.click("#howto-ok"); } });
+  await checkTransfer({ browser, url, game: "dema-tashikame", sample, check, open: async (pg) => { await firstClose(pg); } });
 } catch (e) { check("引き継ぎの検査が最後まで動く", false, e.message.split("\n")[0]); }
 { // 知らせ（.toast）は下のボタンを塞がない（shared-workflows incidents/2026-11-17-known-game-bugs-spread.md）
   const pt = await browser.newPage(); await pt.goto(url);
